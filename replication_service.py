@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.models import Order, User, FollowerRelationship, OrderStatus, CopyStrategy
 from app.schemas.schemas import OrderCreate, ReplicationResult
-from app.services.iifl_client import IIFLClient
+from app.services.iifl_client_v2 import get_iifl_client_v2
 from app.services.websocket_manager import manager
 
 class OrderReplicationService:
@@ -21,7 +21,7 @@ class OrderReplicationService:
     """
     
     def __init__(self):
-        self.iifl_client = IIFLClient()
+        self.iifl_client = get_iifl_client_v2()
         self.semaphore = asyncio.Semaphore(50)  # Limit concurrent API calls
     
     async def replicate_master_order(
@@ -142,6 +142,16 @@ class OrderReplicationService:
             # Skip if quantity is 0
             if quantity <= 0:
                 continue
+
+            # OPTIONAL: Risk Management Enforcement
+            # Uncomment these lines to enforce risk limits:
+
+            # order_value = quantity * (master_order.price or 2500)  # Estimate if market order
+            # if order_value > relationship.max_order_value:
+            #     print(f"⚠️ Order value ₹{order_value:,.2f} exceeds limit ₹{relationship.max_order_value:,.2f} for {user.username}")
+            #     continue  # Skip this follower
+
+            # TODO: Add daily loss checking here if needed
             
             follower_orders.append({
                 "user_id": user.id,
@@ -193,19 +203,32 @@ class OrderReplicationService:
             # Use semaphore to limit concurrent API calls
             async with self.semaphore:
                 try:
-                    # Place order via IIFL API
+                    # Get user object for IIFL credentials
+                    user_query = select(User).where(User.id == order_data["user_id"])
+                    user_result = await db.execute(user_query)
+                    user = user_result.scalar_one_or_none()
+
+                    if not user:
+                        raise Exception(f"User {order_data['user_id']} not found")
+
+                    # Place order via IIFL API V2 with exact structure
                     result = await self.iifl_client.place_order(
-                        account_id=order_data["iifl_account_id"],
+                        user=user,
                         symbol=order_data["symbol"],
                         side=order_data["side"].value,
                         quantity=order_data["quantity"],
                         price=float(order_data["price"]) if order_data["price"] else None,
-                        order_type=order_data["order_type"].value
+                        order_type="LIMIT" if order_data["price"] else "MARKET",
+                        db=db
                     )
                     
-                    # Update order status
-                    follower_order.status = OrderStatus.SUBMITTED
-                    follower_order.broker_order_id = result.get("order_id")
+                    # Update order status with IIFL response data
+                    if result.get("success"):
+                        follower_order.status = OrderStatus.SUBMITTED
+                        follower_order.broker_order_id = result.get("order_id")
+                        # Store additional IIFL data
+                        follower_order.exchange_order_id = result.get("exchange_order_id")
+                        follower_order.remote_order_id = result.get("remote_order_id")
                     
                     # Calculate latency
                     latency_ms = (datetime.utcnow() - start_time).total_seconds() * 1000

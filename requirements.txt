@@ -4,62 +4,62 @@
 # ============================================
 # CORE FRAMEWORK
 # ============================================
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-uvloop==0.19.0
+fastapi
+uvicorn[standard]
+uvloop
 
 # ============================================
 # DATABASE
 # ============================================
-sqlalchemy==2.0.25
-asyncpg==0.29.0
-alembic==1.13.1
+sqlalchemy
+asyncpg
+alembic
 
 # ============================================
 # DATA VALIDATION
 # ============================================
-pydantic==2.5.3
-pydantic-settings==2.1.0
-email-validator==2.1.0
+pydantic
+pydantic-settings
+email-validator
 
 # ============================================
 # AUTHENTICATION & SECURITY
 # ============================================
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
-python-multipart==0.0.6
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
 
 # ============================================
 # HTTP CLIENT (with connection pooling)
 # ============================================
-httpx[http2]==0.26.0
+httpx[http2]
 
 # ============================================
 # CACHING & MESSAGING
 # ============================================
-redis==5.0.1
-nats-py==2.6.0
+redis
+nats-py
 
 # ============================================
 # CONFIGURATION
 # ============================================
-python-dotenv==1.0.0
+python-dotenv
 
 # ============================================
 # MONITORING
 # ============================================
-prometheus-client==0.19.0
-prometheus-fastapi-instrumentator==6.1.0
+prometheus-client
+prometheus-fastapi-instrumentator
 
 # ============================================
 # TESTING (optional, for development)
 # ============================================
-pytest==7.4.4
-pytest-asyncio==0.23.3
+pytest
+pytest-asyncio
 
 # ============================================
 # CODE QUALITY (optional, for development)
 # ============================================
-black==23.12.1
-flake8==7.0.0
-mypy==1.8.0
+black
+flake8
+mypy
