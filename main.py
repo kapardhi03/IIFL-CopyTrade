@@ -6,27 +6,70 @@ from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconn
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
+import logging
 
 from app.api import orders, users, masters
+from app.api.webhooks import router as webhooks_router
+from app.api.v1.masters_endpoints import router as masters_v1_router
+from app.api.v1.followers_endpoints import router as followers_v1_router
 from app.core.config import settings
+from app.core.logging_config import setup_logging
 from app.db.database import init_db
 from app.services.websocket_manager import manager
+from app.services.redis_service import get_redis_service, close_redis_service
+from app.services.nats_service import get_nats_service, close_nats_service
+
+# Setup logging
+setup_logging(log_level="INFO", json_format=False)
+logger = logging.getLogger(__name__)
 
 # Lifespan context manager for startup/shutdown events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    print("🚀 Starting Copy Trading Platform...")
+    logger.info("🚀 Starting Replicon Copy Trading Platform...")
+
+    # Initialize database
     await init_db()
-    print("✅ Database initialized")
-    
-    # Start background services
-    # await start_order_polling_service()  # Will implement later
-    
+    logger.info("✅ Database initialized")
+
+    # Initialize Redis
+    try:
+        await get_redis_service()
+        logger.info("✅ Redis connected")
+    except Exception as e:
+        logger.error(f"⚠️  Redis connection failed: {e}")
+
+    # Initialize NATS
+    try:
+        await get_nats_service()
+        logger.info("✅ NATS JetStream connected")
+    except Exception as e:
+        logger.error(f"⚠️  NATS connection failed: {e}")
+
+    logger.info("✅ All services initialized successfully")
+    logger.info(f"📚 API Documentation: http://localhost:8000/docs")
+
     yield
-    
+
     # Shutdown
-    print("🛑 Shutting down...")
+    logger.info("🛑 Shutting down Replicon...")
+
+    # Close Redis
+    try:
+        await close_redis_service()
+        logger.info("✅ Redis closed")
+    except Exception as e:
+        logger.error(f"Error closing Redis: {e}")
+
+    # Close NATS
+    try:
+        await close_nats_service()
+        logger.info("✅ NATS closed")
+    except Exception as e:
+        logger.error(f"Error closing NATS: {e}")
+
+    logger.info("✅ Shutdown complete")
 
 # Create FastAPI app
 app = FastAPI(
@@ -46,9 +89,15 @@ app.add_middleware(
 )
 
 # Include routers
+# Legacy routers (existing)
 app.include_router(users.router, prefix="/api/users", tags=["users"])
-app.include_router(masters.router, prefix="/api/masters", tags=["masters"])
+app.include_router(masters.router, prefix="/api/masters-legacy", tags=["masters-legacy"])
 app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
+
+# New V1 API routers (Replicon backend)
+app.include_router(webhooks_router, prefix="/api", tags=["Webhooks"])
+app.include_router(masters_v1_router, prefix="/api", tags=["Masters"])
+app.include_router(followers_v1_router, prefix="/api", tags=["Followers"])
 
 # Health check endpoint
 @app.get("/health")

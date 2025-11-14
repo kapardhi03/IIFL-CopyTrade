@@ -235,3 +235,113 @@ class IIFLScripCode(Base):
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
+# ============================================
+# AUDIT LOG - Track all system operations
+# ============================================
+class AuditActionType(PyEnum):
+    # Order actions
+    ORDER_CREATED = "ORDER_CREATED"
+    ORDER_MODIFIED = "ORDER_MODIFIED"
+    ORDER_CANCELLED = "ORDER_CANCELLED"
+    ORDER_FILLED = "ORDER_FILLED"
+    ORDER_REJECTED = "ORDER_REJECTED"
+    ORDER_FAILED = "ORDER_FAILED"
+
+    # User actions
+    USER_LOGIN = "USER_LOGIN"
+    USER_LOGOUT = "USER_LOGOUT"
+    USER_CREATED = "USER_CREATED"
+    USER_UPDATED = "USER_UPDATED"
+    USER_DELETED = "USER_DELETED"
+
+    # Master/Follower actions
+    MASTER_CREATED = "MASTER_CREATED"
+    FOLLOWER_CREATED = "FOLLOWER_CREATED"
+    MAPPING_CREATED = "MAPPING_CREATED"
+    MAPPING_DELETED = "MAPPING_DELETED"
+
+    # System actions
+    WEBHOOK_RECEIVED = "WEBHOOK_RECEIVED"
+    REPLICATION_STARTED = "REPLICATION_STARTED"
+    REPLICATION_COMPLETED = "REPLICATION_COMPLETED"
+    REPLICATION_FAILED = "REPLICATION_FAILED"
+
+    # API actions
+    IIFL_AUTH_SUCCESS = "IIFL_AUTH_SUCCESS"
+    IIFL_AUTH_FAILED = "IIFL_AUTH_FAILED"
+    IIFL_API_ERROR = "IIFL_API_ERROR"
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Action details
+    action_type = Column(Enum(AuditActionType), nullable=False, index=True)
+    action_description = Column(Text, nullable=True)
+
+    # User/Entity tracking
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    master_order_id = Column(Integer, ForeignKey("orders.id"), nullable=True, index=True)
+    follower_order_id = Column(Integer, nullable=True)
+
+    # Request tracking
+    request_id = Column(String(100), index=True)
+    ip_address = Column(String(45))
+    user_agent = Column(String(500))
+
+    # Additional metadata (JSON)
+    metadata = Column(Text, nullable=True)  # Store JSON string
+
+    # Status
+    success = Column(Boolean, default=True, nullable=False)
+    error_message = Column(Text, nullable=True)
+
+    # Timestamp
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id])
+    master_order = relationship("Order", foreign_keys=[master_order_id])
+
+
+# ============================================
+# ORDER MAP - Track master to follower order mapping
+# ============================================
+class OrderMap(Base):
+    __tablename__ = "order_maps"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    # Master order reference
+    master_order_id = Column(Integer, ForeignKey("orders.id"), nullable=False, index=True)
+    master_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    master_broker_order_id = Column(String(100), index=True)  # IIFL BrokerOrderID from master
+
+    # Follower order reference
+    follower_order_id = Column(Integer, ForeignKey("orders.id"), nullable=False, index=True)
+    follower_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    follower_broker_order_id = Column(String(100), index=True)  # IIFL BrokerOrderID from follower
+
+    # Mapping metadata
+    scaling_factor = Column(DECIMAL(10, 4), default=PyDecimal('1.0000'))
+    original_quantity = Column(Integer, nullable=False)  # Master order quantity
+    follower_quantity = Column(Integer, nullable=False)  # Follower order quantity (after scaling)
+
+    # Status tracking
+    replication_status = Column(String(50), default="PENDING")  # PENDING, SUCCESS, FAILED
+    replication_latency_ms = Column(Integer, nullable=True)
+    error_message = Column(Text, nullable=True)
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Relationships
+    master_order = relationship("Order", foreign_keys=[master_order_id])
+    follower_order = relationship("Order", foreign_keys=[follower_order_id])
+    master_user = relationship("User", foreign_keys=[master_user_id])
+    follower_user = relationship("User", foreign_keys=[follower_user_id])

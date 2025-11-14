@@ -30,6 +30,18 @@ class Settings(BaseSettings):
         default="nats://localhost:4222",
         description="NATS server URL"
     )
+    NATS_STREAM_NAME: str = Field(
+        default="REPLICON_ORDERS",
+        description="NATS JetStream stream name"
+    )
+    NATS_SUBJECT_PREFIX: str = Field(
+        default="replicon.orders",
+        description="NATS subject prefix for order events"
+    )
+    NATS_CONSUMER_NAME: str = Field(
+        default="order-worker",
+        description="NATS consumer name for order worker"
+    )
 
     # Authentication
     SECRET_KEY: str = Field(
@@ -39,26 +51,41 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     ALGORITHM: str = "HS256"
 
-    # IIFL API Configuration
-    IIFL_API_URL: str = Field(
-        default="https://api.iifl.com/trading/v1",
-        description="IIFL API base URL"
-    )
-    IIFL_API_KEY: str = Field(
+    # Encryption
+    ENCRYPTION_KEY: str = Field(
         default="",
-        description="Your IIFL API key"
+        description="Base64-encoded encryption key for sensitive data (auto-generated if empty)"
+    )
+
+    # IIFL API Configuration
+    # Blaze (Master) API
+    IIFL_BLAZE_API_URL: str = Field(
+        default="https://ttblaze.iifl.com",
+        description="IIFL Blaze API base URL for master account"
+    )
+
+    # Normal REST API (Followers)
+    IIFL_API_URL: str = Field(
+        default="https://api.iiflsecurities.com",
+        description="IIFL Normal REST API base URL for followers"
+    )
+    IIFL_VENDOR_KEY: str = Field(
+        default="",
+        description="IIFL Vendor Key for authentication"
+    )
+    IIFL_VENDOR_CODE: str = Field(
+        default="",
+        description="IIFL Vendor Code"
     )
     IIFL_API_SECRET: str = Field(
         default="",
-        description="Your IIFL API secret"
+        description="IIFL API Secret"
     )
-    IIFL_USER_ID: str = Field(
-        default="",
-        description="Your IIFL user ID"
-    )
-    IIFL_PASSWORD: str = Field(
-        default="",
-        description="Your IIFL password"
+
+    # Rate limiting
+    IIFL_RATE_LIMIT_PER_SECOND: int = Field(
+        default=10,
+        description="Maximum IIFL API requests per second"
     )
 
     # Performance Settings
