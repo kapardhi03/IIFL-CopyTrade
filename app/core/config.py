@@ -106,6 +106,54 @@ class Settings(BaseSettings):
     DEFAULT_MAX_ORDER_VALUE: float = 10000000.0  # ₹1 Crore
     DEFAULT_MAX_DAILY_LOSS: float = 5000000.0    # ₹50 Lakh
 
+    # Logging Configuration
+    LOG_LEVEL: str = Field(
+        default="INFO",
+        description="Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL"
+    )
+    LOG_FILE: str = Field(
+        default="",
+        description="Log file path (optional, logs to stdout if empty)"
+    )
+    JSON_LOGS: bool = Field(
+        default=False,
+        description="Use JSON format for logs"
+    )
+
+    # CORS Settings
+    CORS_ORIGINS: str = Field(
+        default="http://localhost:3000,http://localhost:5173",
+        description="Allowed CORS origins (comma-separated)"
+    )
+
+    # Monitoring
+    ENABLE_METRICS: bool = Field(
+        default=True,
+        description="Enable Prometheus metrics"
+    )
+    SENTRY_DSN: str = Field(
+        default="",
+        description="Sentry DSN for error tracking (optional)"
+    )
+
+    # Deployment Settings
+    HOST: str = Field(
+        default="0.0.0.0",
+        description="Server host"
+    )
+    PORT: int = Field(
+        default=8000,
+        description="Server port"
+    )
+    WORKERS: int = Field(
+        default=4,
+        description="Number of worker processes"
+    )
+    RELOAD: bool = Field(
+        default=True,
+        description="Auto-reload on code changes (development only)"
+    )
+
     class Config:
         env_file = ".env"
         case_sensitive = True
