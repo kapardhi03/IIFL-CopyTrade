@@ -35,3 +35,5 @@ export { default as ProgressSteps } from './ProgressSteps';
 export type { Step } from './ProgressSteps';
 
 export { default as PasswordStrength } from './PasswordStrength';
+
+export { default as StatCard } from './StatCard';
