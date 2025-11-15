@@ -37,3 +37,8 @@ export type { Step } from './ProgressSteps';
 export { default as PasswordStrength } from './PasswordStrength';
 
 export { default as StatCard } from './StatCard';
+
+export { default as Table } from './Table';
+export type { Column } from './Table';
+
+export { default as Pagination } from './Pagination';
