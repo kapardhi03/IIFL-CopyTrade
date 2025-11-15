@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './components/ui';
 import { MainLayout } from './components/layout';
+import { ProtectedRoute } from './components/auth';
 import {
   LandingPage,
   TermsPage,
@@ -71,39 +72,54 @@ function App() {
             {/* Authentication Routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute requireEmailVerified={false} requireOnboarding={false}>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Master Trader Routes */}
             <Route
               path="/master/dashboard"
               element={
-                <MainLayout isAuthenticated={true} showSidebar={true}>
-                  <DashboardPage />
-                </MainLayout>
+                <ProtectedRoute requiredRole="master" requireOnboarding={true}>
+                  <MainLayout isAuthenticated={true} showSidebar={true}>
+                    <DashboardPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/master/followers"
               element={
-                <MainLayout isAuthenticated={true} showSidebar={true}>
-                  <FollowersPage />
-                </MainLayout>
+                <ProtectedRoute requiredRole="master" requireOnboarding={true}>
+                  <MainLayout isAuthenticated={true} showSidebar={true}>
+                    <FollowersPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/master/strategies"
               element={
-                <MainLayout isAuthenticated={true} showSidebar={true}>
-                  <StrategiesPage />
-                </MainLayout>
+                <ProtectedRoute requiredRole="master" requireOnboarding={true}>
+                  <MainLayout isAuthenticated={true} showSidebar={true}>
+                    <StrategiesPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/master/api-setup"
               element={
-                <MainLayout isAuthenticated={true} showSidebar={true}>
-                  <APISetupPage />
-                </MainLayout>
+                <ProtectedRoute requiredRole="master" requireOnboarding={true}>
+                  <MainLayout isAuthenticated={true} showSidebar={true}>
+                    <APISetupPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
 
@@ -111,9 +127,11 @@ function App() {
             <Route
               path="/settings"
               element={
-                <MainLayout isAuthenticated={true} showSidebar={true}>
-                  <SettingsPage />
-                </MainLayout>
+                <ProtectedRoute requireOnboarding={true}>
+                  <MainLayout isAuthenticated={true} showSidebar={true}>
+                    <SettingsPage />
+                  </MainLayout>
+                </ProtectedRoute>
               }
             />
           </Routes>
