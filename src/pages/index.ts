@@ -6,3 +6,4 @@ export { default as ContactPage } from './ContactPage';
 export { default as LoginPage } from './LoginPage';
 export { default as RegisterPage } from './RegisterPage';
 export { default as OnboardingPage } from './OnboardingPage';
+export { default as SettingsPage } from './SettingsPage';

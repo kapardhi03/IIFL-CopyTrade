@@ -10,8 +10,14 @@ import {
   LoginPage,
   RegisterPage,
   OnboardingPage,
+  SettingsPage,
 } from './pages';
-import { DashboardPage } from './pages/master';
+import {
+  DashboardPage,
+  FollowersPage,
+  StrategiesPage,
+  APISetupPage,
+} from './pages/master';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -76,8 +82,40 @@ function App() {
                 </MainLayout>
               }
             />
+            <Route
+              path="/master/followers"
+              element={
+                <MainLayout isAuthenticated={true} showSidebar={true}>
+                  <FollowersPage />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/master/strategies"
+              element={
+                <MainLayout isAuthenticated={true} showSidebar={true}>
+                  <StrategiesPage />
+                </MainLayout>
+              }
+            />
+            <Route
+              path="/master/api-setup"
+              element={
+                <MainLayout isAuthenticated={true} showSidebar={true}>
+                  <APISetupPage />
+                </MainLayout>
+              }
+            />
 
-            {/* TODO: Add more master trader routes */}
+            {/* Shared Routes */}
+            <Route
+              path="/settings"
+              element={
+                <MainLayout isAuthenticated={true} showSidebar={true}>
+                  <SettingsPage />
+                </MainLayout>
+              }
+            />
           </Routes>
         </Router>
       </AuthProvider>
