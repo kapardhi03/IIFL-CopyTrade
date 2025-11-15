@@ -1,1 +1,0 @@
-# Copy Trading Platform App Module
